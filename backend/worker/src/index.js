@@ -62,6 +62,7 @@ async function handleRequest(request, env) {
         if (!supabaseUrl) {
           return new Response(JSON.stringify({ error: "Supabase not configured" }), { status: 500 });
         }
+        const supabaseKey = env.SUPABASE_SERVICE_KEY || request.headers.get("X-Supabase-Key") || "";
 
         let query = `${supabaseUrl}/rest/v1/${table}?select=*`;
         if (sport) query += `&sport=eq.${sport}`;
@@ -70,7 +71,6 @@ async function handleRequest(request, env) {
         if (order) query += `&order=${order}`;
         if (limit) query += `&limit=${limit}`;
 
-        const supabaseKey = env.SUPABASE_SERVICE_KEY || request.headers.get("X-Supabase-Key") || "";
         const apiResp = await fetch(query, {
           headers: {
             apikey: supabaseKey,
