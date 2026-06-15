@@ -18,7 +18,18 @@ subprojects {
     afterEvaluate {
         extensions.findByType<com.android.build.gradle.BaseExtension>()?.let {
             if (it.namespace == null) {
-                it.namespace = project.group.toString()
+                val manifestFile = project.layout.projectDirectory
+                    .dir("src/main")
+                    .file("AndroidManifest.xml")
+                    .asFile
+                if (manifestFile.exists()) {
+                    val pkg = Regex("""package\s*=\s*"([^"]+)"""")
+                        .find(manifestFile.readText())
+                        ?.groupValues?.get(1)
+                    if (pkg != null) {
+                        it.namespace = pkg
+                    }
+                }
             }
         }
     }
