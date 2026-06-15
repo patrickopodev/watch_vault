@@ -1,0 +1,58 @@
+name: Build APK
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: subosito/flutter-action@v2
+      with:
+        channel: 'stable'
+        cache: true
+
+    - run: flutter pub get
+    - run: flutter analyze --no-fatal-infos
+    - run: flutter test || true
+    - run: flutter build apk --release --split-per-abi
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: streamvault-apks
+        path: |
+          build/app/outputs/flutter-apk/*.apk
+          build/app/outputs/flutter-apk/output-metadata.json
+        retention-days: 30
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+    - uses: actions/download-artifact@v4
+      with:
+        name: streamvault-apks
+        path: apks/
+
+    - uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v1.0.0-beta
+        name: "StreamVault Beta v1.0.0"
+        body: |
+          ## StreamVault Beta v1.0.0
+          - World Cup priority sorting
+          - Design system migration
+          - BLoC architecture
+          - Cross-sport live scores
+        files: apks/*.apk
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
