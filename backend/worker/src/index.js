@@ -13,7 +13,7 @@ const CACHE_TTL = {
   METADATA: 86400,     // logos, team info: 24h
 };
 
-async function handleRequest(request) {
+async function handleRequest(request, env) {
   const url = new URL(request.url);
   const path = url.pathname;
   const cacheKey = new Request(url.toString(), request);
@@ -33,7 +33,7 @@ async function handleRequest(request) {
       case "thesportsdb": {
         const endpoint = url.searchParams.get("endpoint") || "lookup";
         const query = url.searchParams.get("q") || "";
-        const apiKey = SPORTSDB_API_KEY || "3";
+        const apiKey = env.SPORTSDB_API_KEY || "3";
         const apiUrl = `https://www.thesportsdb.com/api/v1/json/${apiKey}/${endpoint}.php${query ? `?${query}` : ""}`;
 
         const apiResp = await fetch(apiUrl, {
@@ -58,7 +58,7 @@ async function handleRequest(request) {
         const status = url.searchParams.get("status");
         const limit = url.searchParams.get("limit");
         const order = url.searchParams.get("order");
-        const supabaseUrl = SUPABASE_URL;
+        const supabaseUrl = env.SUPABASE_URL;
         if (!supabaseUrl) {
           return new Response(JSON.stringify({ error: "Supabase not configured" }), { status: 500 });
         }
@@ -70,10 +70,11 @@ async function handleRequest(request) {
         if (order) query += `&order=${order}`;
         if (limit) query += `&limit=${limit}`;
 
+        const supabaseKey = env.SUPABASE_SERVICE_KEY || request.headers.get("X-Supabase-Key") || "";
         const apiResp = await fetch(query, {
           headers: {
-            apikey: request.headers.get("X-Supabase-Key") || "",
-            Authorization: request.headers.get("Authorization") || "",
+            apikey: supabaseKey,
+            Authorization: `Bearer ${supabaseKey}`,
           },
         });
         const data = await apiResp.json();
@@ -124,5 +125,5 @@ async function handleRequest(request) {
 }
 
 export default {
-  fetch: handleRequest,
+  fetch(request, env, ctx) { return handleRequest(request, env); },
 };

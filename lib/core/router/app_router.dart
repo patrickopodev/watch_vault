@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 import '../../presentation/home/home_screen.dart';
 import '../../presentation/discover/discover_screen.dart';
@@ -10,42 +10,43 @@ import '../../presentation/public_domain/pd_player_screen.dart';
 import '../../presentation/auth/login_screen.dart';
 import '../../presentation/profile/profile_screen.dart';
 import '../../presentation/shared/layouts/main_scaffold.dart';
+import '../navigation/route_names.dart';
 
 final GlobalKey<NavigatorState> _rootNavigator = GlobalKey<NavigatorState>();
 
 final GoRouter appRouter = GoRouter(
   navigatorKey: _rootNavigator,
-  initialLocation: '/',
+  initialLocation: RouteNames.home,
   routes: [
     ShellRoute(
       builder: (context, state, child) => MainScaffold(child: child),
       routes: [
         GoRoute(
-          path: '/',
+          path: RouteNames.home,
           pageBuilder: (context, state) => const NoTransitionPage(
             child: HomeScreen(),
           ),
         ),
         GoRoute(
-          path: '/discover',
+          path: RouteNames.discover,
           pageBuilder: (context, state) => const NoTransitionPage(
             child: DiscoverScreen(),
           ),
         ),
         GoRoute(
-          path: '/sports',
+          path: RouteNames.sports,
           pageBuilder: (context, state) => const NoTransitionPage(
             child: SportsHomeScreen(),
           ),
         ),
         GoRoute(
-          path: '/live',
+          path: RouteNames.live,
           pageBuilder: (context, state) => const NoTransitionPage(
             child: LiveHomeScreen(),
           ),
         ),
         GoRoute(
-          path: '/profile',
+          path: RouteNames.profile,
           pageBuilder: (context, state) => const NoTransitionPage(
             child: ProfileScreen(),
           ),
@@ -53,7 +54,7 @@ final GoRouter appRouter = GoRouter(
       ],
     ),
     GoRoute(
-      path: '/sports/match/:id',
+      path: RouteNames.matchDetail,
       parentNavigatorKey: _rootNavigator,
       builder: (context, state) => MatchDetailScreen(
         matchId: state.pathParameters['id'] ?? '',
@@ -61,21 +62,21 @@ final GoRouter appRouter = GoRouter(
       ),
     ),
     GoRoute(
-      path: '/live/watch/:id',
+      path: RouteNames.liveWatch,
       parentNavigatorKey: _rootNavigator,
       builder: (context, state) => LiveWatchScreen(
         streamId: state.pathParameters['id'] ?? '',
       ),
     ),
     GoRoute(
-      path: '/watch/:id',
+      path: RouteNames.watch,
       parentNavigatorKey: _rootNavigator,
       builder: (context, state) => PDPlayerScreen(
         videoId: state.pathParameters['id'] ?? '',
       ),
     ),
     GoRoute(
-      path: '/auth/login',
+      path: RouteNames.login,
       parentNavigatorKey: _rootNavigator,
       builder: (context, state) => const LoginScreen(),
     ),

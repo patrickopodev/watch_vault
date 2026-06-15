@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:dio/dio.dart';
-import '../../data/repositories/sports_repository.dart';
-import '../../data/sources/remote/sports_api.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
+import '../../data/repositories/sports_repository.dart';
+import '../../domain/entities/sport_event.dart';
+import '../../injection/dependency_injection.dart';
 import '../shared/widgets/score_badge.dart';
+import 'bloc/sports_bloc.dart';
+import 'bloc/sports_event.dart';
+import 'bloc/sports_state.dart';
 import 'widgets/league_filter_bar.dart';
 import 'widgets/match_card.dart';
 import 'widgets/standings_table.dart';
-import 'sports_cubit.dart';
-import '../../domain/entities/sport_event.dart';
 
 class SportsHomeScreen extends StatelessWidget {
   const SportsHomeScreen({super.key});
@@ -18,9 +20,9 @@ class SportsHomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => SportsCubit(
-        SportsRepository(SportsApi(Dio())),
-      )..loadLiveScores(),
+      create: (_) => SportsBloc(
+        sl<SportsRepository>(),
+      )..add(const LoadLiveScores()),
       child: const _SportsView(),
     );
   }
@@ -37,13 +39,13 @@ class _SportsView extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: () => context.read<SportsCubit>().refresh(),
+            onPressed: () => context.read<SportsBloc>().add(const RefreshSports()),
           ),
         ],
       ),
-      body: BlocBuilder<SportsCubit, SportsState>(
+      body: BlocBuilder<SportsBloc, SportsState>(
         builder: (context, state) {
-          if (state is SportsLoading && state is! SportsLoaded) {
+          if (state is SportsLoading) {
             return const Center(child: CircularProgressIndicator());
           }
           if (state is SportsError) {
@@ -64,14 +66,14 @@ class _SportsView extends StatelessWidget {
             final todayMatches = state.scores.where((s) => !s.isLive).toList();
 
             return RefreshIndicator(
-              onRefresh: () => context.read<SportsCubit>().refresh(sport: selectedSport),
+              onRefresh: () async => context.read<SportsBloc>().add(RefreshSports(sport: selectedSport)),
               child: CustomScrollView(
                 slivers: [
                   SliverToBoxAdapter(
                     child: LeagueFilterBar(
                       selectedSport: selectedSport ?? 'all',
                       onSportSelected: (sport) {
-                        context.read<SportsCubit>().loadBySport(sport);
+                        context.read<SportsBloc>().add(LoadBySport(sport));
                       },
                     ),
                   ),
@@ -187,7 +189,7 @@ class LiveMatchPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => Navigator.pushNamed(context, '/sports/match/${match.matchId}?sport=${match.sport}'),
+      onTap: () => context.push('/sports/match/${match.matchId}?sport=${match.sport}'),
       child: Container(
         width: 130,
         height: 90,

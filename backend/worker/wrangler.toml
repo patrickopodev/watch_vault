@@ -1,10 +1,11 @@
-name = "streamvault-cache"
+name = "watchvault-proxy"
 main = "src/index.js"
 compatibility_date = "2024-12-01"
+
 
 [observability]
 enabled = true
 
 [vars]
-SPORTSDB_API_KEY = ""
-SUPABASE_URL = ""
+SPORTSDB_API_KEY = "3"
+SUPABASE_URL = "https://gkufowjkbgzqwlnksqjl.supabase.co"
