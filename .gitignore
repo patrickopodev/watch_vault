@@ -39,6 +39,19 @@ app.*.symbols
 # Obfuscation related
 app.*.map.json
 
+# Node.js
+node_modules/
+
+# Graphify output
+graphify-out/
+test/graphify-out/
+
+# Misc scripts
+migrate_*.ps1
+plan_chunks.py
+step*.py
+check_state.py
+
 # Android Studio will place build artifacts here
 /android/app/debug
 /android/app/profile

@@ -1,6 +1,6 @@
 import '../../domain/entities/movie.dart';
 import '../sources/remote/tmdb_api.dart';
-import '../models/movie_model.dart';
+
 
 class MovieRepository {
   final TmdbApi _tmdb;

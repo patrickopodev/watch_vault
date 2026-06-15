@@ -133,4 +133,6 @@ export 'package:flutter/material.dart' show
   MediaQuery,
   Navigator,
   NeverScrollableScrollPhysics,
-  Radius;
+  Radius,
+  runApp,
+  WidgetsFlutterBinding;

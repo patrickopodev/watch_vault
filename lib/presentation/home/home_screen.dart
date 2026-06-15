@@ -2,7 +2,7 @@ import 'package:streamvault/design_system/ds.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_typography.dart';
-import '../../core/utils/formatters.dart';
+
 import 'widgets/featured_banner.dart';
 import 'widgets/trending_row.dart';
 import 'widgets/live_now_row.dart';

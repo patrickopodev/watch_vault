@@ -2,7 +2,7 @@ import 'package:streamvault/design_system/ds.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_typography.dart';
-import '../shared/widgets/content_card.dart';
+
 
 class LiveHomeScreen extends StatelessWidget {
   const LiveHomeScreen({super.key});
