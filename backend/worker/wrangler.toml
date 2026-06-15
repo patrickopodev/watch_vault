@@ -1,0 +1,10 @@
+name = "streamvault-cache"
+main = "src/index.js"
+compatibility_date = "2024-12-01"
+
+[observability]
+enabled = true
+
+[vars]
+SPORTSDB_API_KEY = ""
+SUPABASE_URL = ""

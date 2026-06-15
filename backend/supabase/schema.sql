@@ -1,0 +1,132 @@
+-- StreamVault Supabase Schema
+-- Run this in Supabase SQL Editor on project creation.
+
+-- ============================================================
+-- 1. LIVE SCORES (populated by GitHub Actions scraper)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS live_scores (
+  match_id      TEXT PRIMARY KEY,
+  sport         TEXT DEFAULT 'football',
+  home_team     TEXT NOT NULL,
+  away_team     TEXT NOT NULL,
+  home_score    INTEGER,
+  away_score    INTEGER,
+  minute        TEXT,
+  status        TEXT DEFAULT 'scheduled',
+  league        TEXT,
+  league_logo   TEXT,
+  home_logo     TEXT,
+  away_logo     TEXT,
+  venue         TEXT,
+  scraped_at    TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_live_scores_status ON live_scores(status);
+
+-- ============================================================
+-- 2. USERS (profiles, extending auth.users)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS profiles (
+  id              UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  username        TEXT UNIQUE,
+  display_name    TEXT,
+  avatar_url      TEXT,
+  bio             TEXT,
+  favorite_team   TEXT,
+  favorite_leagues TEXT[] DEFAULT '{}',
+  created_at      TIMESTAMPTZ DEFAULT now(),
+  updated_at      TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "profiles_select_own" ON profiles
+  FOR SELECT USING (auth.uid() = id);
+
+CREATE POLICY "profiles_update_own" ON profiles
+  FOR UPDATE USING (auth.uid() = id);
+
+-- ============================================================
+-- 3. WATCHLIST (movies, shows)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS watchlist (
+  id            UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id       UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  content_id    TEXT NOT NULL,
+  content_type  TEXT CHECK (content_type IN ('movie', 'tv_show', 'sport_event')),
+  title         TEXT NOT NULL,
+  poster_url    TEXT,
+  added_at      TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(user_id, content_id, content_type)
+);
+
+ALTER TABLE watchlist ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "watchlist_select_own" ON watchlist
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "watchlist_insert_own" ON watchlist
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "watchlist_delete_own" ON watchlist
+  FOR DELETE USING (auth.uid() = user_id);
+
+-- ============================================================
+-- 4. CREATOR LIVE STREAMS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS live_streams (
+  id            UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  creator_id    UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  title         TEXT NOT NULL,
+  description   TEXT,
+  thumbnail_url TEXT,
+  category      TEXT DEFAULT 'general',
+  is_live       BOOLEAN DEFAULT false,
+  viewer_count  INTEGER DEFAULT 0,
+  started_at    TIMESTAMPTZ DEFAULT now(),
+  ended_at      TIMESTAMPTZ
+);
+
+ALTER TABLE live_streams ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "live_streams_select_all" ON live_streams
+  FOR SELECT USING (true);
+
+CREATE POLICY "live_streams_insert_own" ON live_streams
+  FOR INSERT WITH CHECK (auth.uid() = creator_id);
+
+CREATE POLICY "live_streams_update_own" ON live_streams
+  FOR UPDATE USING (auth.uid() = creator_id);
+
+-- ============================================================
+-- 5. STORAGE BUCKETS
+-- ============================================================
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('avatars', 'avatars', true)
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('thumbnails', 'thumbnails', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- ============================================================
+-- 6. AUTO-CREATE PROFILE ON SIGNUP
+-- ============================================================
+CREATE OR REPLACE FUNCTION handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.profiles (id, username, display_name, avatar_url)
+  VALUES (
+    NEW.id,
+    LOWER(SPLIT_PART(NEW.email, '@', 1)),
+    COALESCE(NEW.raw_user_meta_data->>'full_name', SPLIT_PART(NEW.email, '@', 1)),
+    NULL
+  );
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION handle_new_user();
