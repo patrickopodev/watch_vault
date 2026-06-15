@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:streamvault/design_system/ds.dart';
 import 'package:go_router/go_router.dart';
 
 class MainScaffold extends StatelessWidget {

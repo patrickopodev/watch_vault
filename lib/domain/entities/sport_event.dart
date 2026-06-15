@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:streamvault/design_system/ds.dart';
 
 class SportEvent {
   final String matchId;
