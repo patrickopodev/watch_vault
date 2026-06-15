@@ -30,3 +30,11 @@ class RefreshSports extends SportsEvent {
   @override
   List<Object?> get props => [sport];
 }
+
+class FilterByTournament extends SportsEvent {
+  final String tournament;
+  const FilterByTournament(this.tournament);
+
+  @override
+  List<Object?> get props => [tournament];
+}

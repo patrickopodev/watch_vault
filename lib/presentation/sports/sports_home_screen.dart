@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
+import '../../core/constants/app_spacing.dart';
 import '../../data/repositories/sports_repository.dart';
 import '../../domain/entities/sport_event.dart';
 import '../../injection/dependency_injection.dart';
@@ -62,8 +63,10 @@ class _SportsView extends StatelessWidget {
           }
           if (state is SportsLoaded) {
             final selectedSport = state.selectedSport;
-            final liveScores = state.scores.where((s) => s.isLive).toList();
-            final todayMatches = state.scores.where((s) => !s.isLive).toList();
+            final selectedTournament = state.selectedTournament;
+            final filteredScores = state.filteredScores;
+            final liveScores = filteredScores.where((s) => s.isLive).toList();
+            final todayMatches = filteredScores.where((s) => !s.isLive).toList();
 
             return RefreshIndicator(
               onRefresh: () async => context.read<SportsBloc>().add(RefreshSports(sport: selectedSport)),
@@ -75,6 +78,39 @@ class _SportsView extends StatelessWidget {
                       onSportSelected: (sport) {
                         context.read<SportsBloc>().add(LoadBySport(sport));
                       },
+                    ),
+                  ),
+                  SliverToBoxAdapter(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      child: Row(
+                        children: [
+                          _TournamentChip(
+                            label: '🌍 World Cup',
+                            selected: selectedTournament == 'worldcup',
+                            onTap: () => context.read<SportsBloc>().add(const FilterByTournament('worldcup')),
+                          ),
+                          const SizedBox(width: 8),
+                          _TournamentChip(
+                            label: '⚽ All',
+                            selected: selectedTournament == 'all',
+                            onTap: () => context.read<SportsBloc>().add(const FilterByTournament('all')),
+                          ),
+                          const SizedBox(width: 8),
+                          _TournamentChip(
+                            label: '🏆 UCL',
+                            selected: selectedTournament == 'ucl',
+                            onTap: () => context.read<SportsBloc>().add(const FilterByTournament('ucl')),
+                          ),
+                          const SizedBox(width: 8),
+                          _TournamentChip(
+                            label: '🏴󠁧󠁢󠁥󠁮󠁧󠁿 EPL',
+                            selected: selectedTournament == 'epl',
+                            onTap: () => context.read<SportsBloc>().add(const FilterByTournament('epl')),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   if (liveScores.isNotEmpty)
@@ -177,6 +213,42 @@ class _SportsView extends StatelessWidget {
           }
           return const SizedBox();
         },
+      ),
+    );
+  }
+}
+
+class _TournamentChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _TournamentChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.primary : AppColors.surface,
+          borderRadius: BorderRadius.circular(AppSpacing.borderRadiusLg),
+          border: Border.all(
+            color: selected ? AppColors.primary : AppColors.border,
+          ),
+        ),
+        child: Text(
+          label,
+          style: AppTypography.bodyMedium.copyWith(
+            color: selected ? Colors.white : AppColors.textSecondary,
+            fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+          ),
+        ),
       ),
     );
   }

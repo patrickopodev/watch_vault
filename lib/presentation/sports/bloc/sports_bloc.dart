@@ -10,6 +10,7 @@ class SportsBloc extends Bloc<SportsEvent, SportsState> {
     on<LoadLiveScores>(_onLoadLiveScores);
     on<LoadBySport>(_onLoadBySport);
     on<RefreshSports>(_onRefresh);
+    on<FilterByTournament>(_onFilterByTournament);
   }
 
   Future<void> _onLoadLiveScores(
@@ -45,6 +46,20 @@ class SportsBloc extends Bloc<SportsEvent, SportsState> {
       emit(SportsLoaded(scores: scores, selectedSport: event.sport));
     } catch (e) {
       emit(SportsError(message: e.toString()));
+    }
+  }
+
+  void _onFilterByTournament(
+    FilterByTournament event,
+    Emitter<SportsState> emit,
+  ) {
+    final current = state;
+    if (current is SportsLoaded) {
+      emit(SportsLoaded(
+        scores: current.scores,
+        selectedSport: current.selectedSport,
+        selectedTournament: event.tournament,
+      ));
     }
   }
 }
