@@ -1,7 +1,7 @@
 class ApiEndpoints {
   ApiEndpoints._();
 
-  static const String cacheWorkerBase = 'https://streamvault-cache.example.workers.dev';
+  static const String cacheWorkerBase = 'https://watchvault-proxy.patrickopo-dev.workers.dev';
 
   static const String theSportsDbBase = 'https://www.thesportsdb.com/api/v1/json/3';
 

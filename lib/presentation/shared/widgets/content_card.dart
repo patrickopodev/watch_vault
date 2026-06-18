@@ -9,6 +9,7 @@ class ContentCard extends StatelessWidget {
   final String title;
   final String? subtitle;
   final String? duration;
+  final double? rating;
   final bool isLive;
   final bool isPoster;
   final List<String>? platformLogos;
@@ -20,6 +21,7 @@ class ContentCard extends StatelessWidget {
     required this.title,
     this.subtitle,
     this.duration,
+    this.rating,
     this.isLive = false,
     this.isPoster = false,
     this.platformLogos,
@@ -140,6 +142,29 @@ class ContentCard extends StatelessWidget {
                   ),
                 ),
               ),
+            if (rating != null)
+              Positioned(
+                top: 8,
+                right: 8,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.7),
+                    borderRadius: BorderRadius.circular(AppSpacing.borderRadiusXs),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.star, size: 12, color: Color(0xFFFBBF24)),
+                      const SizedBox(width: 2),
+                      Text(
+                        rating!.toStringAsFixed(1),
+                        style: AppTypography.labelSmall.copyWith(color: Colors.white),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             if (duration != null)
               Positioned(
                 bottom: 8,
@@ -178,7 +203,7 @@ class ContentCard extends StatelessWidget {
       width: w,
       height: h,
       color: AppColors.surfaceElevated,
-      child: Icon(Icons.movie_outlined, color: AppColors.textMuted, size: 32),
+      child: const Icon(Icons.movie_outlined, color: AppColors.textMuted, size: 32),
     );
   }
 }
@@ -201,7 +226,7 @@ class _PlatformLogo extends StatelessWidget {
         child: CachedNetworkImage(
           imageUrl: logo,
           fit: BoxFit.contain,
-          errorWidget: (_, __, ___) => const SizedBox(),
+                  errorWidget: (_, __, ___) => const SizedBox.shrink(),
         ),
       ),
     );

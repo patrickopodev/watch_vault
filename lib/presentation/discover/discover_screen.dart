@@ -1,17 +1,34 @@
 import 'package:streamvault/design_system/ds.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/constants/app_colors.dart';
-
 import '../../core/constants/app_typography.dart';
+import '../../data/repositories/movie_repository.dart';
+import '../../injection/dependency_injection.dart';
 import '../shared/widgets/content_card.dart';
+import 'bloc/movie_bloc.dart';
+import 'bloc/movie_event.dart';
+import 'bloc/movie_state.dart';
 
-class DiscoverScreen extends StatefulWidget {
+class DiscoverScreen extends StatelessWidget {
   const DiscoverScreen({super.key});
 
   @override
-  State<DiscoverScreen> createState() => _DiscoverScreenState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => MovieBloc(sl<MovieRepository>())..add(const LoadPopularMovies()),
+      child: const _DiscoverView(),
+    );
+  }
 }
 
-class _DiscoverScreenState extends State<DiscoverScreen> {
+class _DiscoverView extends StatefulWidget {
+  const _DiscoverView();
+
+  @override
+  State<_DiscoverView> createState() => _DiscoverViewState();
+}
+
+class _DiscoverViewState extends State<_DiscoverView> {
   final _searchController = TextEditingController();
   final _filterChips = ['All', 'Movies', 'TV Shows', 'Documentaries', 'Animation', 'Kids'];
   int _selectedFilter = 0;
@@ -57,12 +74,18 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                         isDense: true,
                         contentPadding: EdgeInsets.zero,
                       ),
+                      onSubmitted: (query) {
+                        if (query.isNotEmpty) {
+                          context.read<MovieBloc>().add(SearchMovies(query: query));
+                        }
+                      },
                     ),
                   ),
                   if (_searchController.text.isNotEmpty)
                     GestureDetector(
                       onTap: () {
                         _searchController.clear();
+                        context.read<MovieBloc>().add(const LoadPopularMovies());
                         setState(() {});
                       },
                       child: const Icon(Icons.close, size: 18, color: Color(0xFF50505F)),
@@ -134,22 +157,53 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
               ),
             ),
           ),
-          SliverGrid(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 0.7,
-              crossAxisSpacing: 10,
-              mainAxisSpacing: 10,
-            ),
-            delegate: SliverChildBuilderDelegate(
-              (context, index) => ContentCard(
-                title: 'Movie ${index + 1}',
-                subtitle: '2024',
-                duration: '2h',
-                platformLogos: ['netflix', 'prime'],
-              ),
-              childCount: 10,
-            ),
+          BlocBuilder<MovieBloc, MovieState>(
+            builder: (context, state) {
+              if (state is MovieLoading) {
+                return const SliverFillRemaining(
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+              if (state is MovieError) {
+                return SliverFillRemaining(
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.error_outline, size: 48, color: Color(0xFFEF4444)),
+                        const SizedBox(height: 16),
+                        Text(state.message),
+                      ],
+                    ),
+                  ),
+                );
+              }
+              if (state is MovieLoaded) {
+                final movies = state.movies;
+                return SliverGrid(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    childAspectRatio: 0.7,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                  ),
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final movie = movies[index];
+                      return ContentCard(
+                        title: movie.title,
+                        subtitle: movie.year ?? '',
+                        duration: movie.runtime != null ? '${movie.runtime}m' : null,
+                        imageUrl: movie.posterUrl,
+                        rating: movie.rating,
+                      );
+                    },
+                    childCount: movies.length,
+                  ),
+                );
+              }
+              return const SliverToBoxAdapter(child: SizedBox());
+            },
           ),
           const SliverToBoxAdapter(child: SizedBox(height: 24)),
         ],
