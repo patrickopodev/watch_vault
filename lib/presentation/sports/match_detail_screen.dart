@@ -94,13 +94,27 @@ class _MatchDetailView extends StatelessWidget {
               ),
             ),
             SliverFillRemaining(
-              child: TabBarView(
-                children: [
-                  _TimelineTab(),
-                  _StatsTab(),
-                  _LineupsTab(),
-                  _H2HTab(),
-                ],
+              child: BlocBuilder<MatchDetailBloc, MatchDetailState>(
+                builder: (context, state) {
+                  if (state is MatchDetailLoaded) {
+                    return TabBarView(
+                      children: [
+                        _TimelineTab(match: state.match),
+                        _StatsTab(match: state.match),
+                        _LineupsTab(match: state.match),
+                        _H2HTab(match: state.match),
+                      ],
+                    );
+                  }
+                  return const TabBarView(
+                    children: [
+                      Center(child: Text('')),
+                      Center(child: Text('')),
+                      Center(child: Text('')),
+                      Center(child: Text('')),
+                    ],
+                  );
+                },
               ),
             ),
           ],
@@ -311,35 +325,59 @@ class _TeamColumn extends StatelessWidget {
 }
 
 class _TimelineTab extends StatelessWidget {
+  final SportEvent match;
+  const _TimelineTab({required this.match});
+
   @override
   Widget build(BuildContext context) {
+    if (match.isUpcoming) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.schedule, size: 48, color: Colors.grey[600]),
+            const SizedBox(height: 16),
+            Text('Match has not started yet',
+                style: AppTypography.bodyLarge.copyWith(color: Colors.grey)),
+          ],
+        ),
+      );
+    }
     return ListView(
       padding: const EdgeInsets.all(16),
-      children: const [
+      children: [
         _TimelineEvent(
             minute: "12'",
             icon: Icons.sports_soccer,
-            description: 'Goal by Player A',
+            description: 'Goal scored!',
+            detail: '${match.homeTeam} takes the lead',
             isHome: true),
-        _TimelineEvent(
-            minute: "34'",
-            icon: Icons.sports_soccer,
-            description: 'Goal by Player B',
-            isHome: false),
+        if (match.awayTeam.isNotEmpty)
+          _TimelineEvent(
+              minute: "34'",
+              icon: Icons.sports_soccer,
+              description: 'Equalizer!',
+              detail: '${match.awayTeam} pulls one back',
+              isHome: false),
         _TimelineEvent(
             minute: "45+2'",
             icon: Icons.warning_amber,
-            description: 'Yellow Card - Player C',
+            description: 'Yellow Card',
+            detail: 'Defender booked for a late tackle',
             isHome: true),
-        _TimelineEvent(
-            minute: "67'",
-            icon: Icons.sports_soccer,
-            description: 'Goal by Player D',
-            isHome: true),
+        if (match.homeScore != null && match.awayScore != null &&
+            match.homeScore! > match.awayScore!)
+          _TimelineEvent(
+              minute: "67'",
+              icon: Icons.sports_soccer,
+              description: 'Goal scored!',
+              detail: '${match.homeTeam} extends the lead',
+              isHome: true),
         _TimelineEvent(
             minute: "78'",
             icon: Icons.swap_horiz,
-            description: 'Substitution - Player E',
+            description: 'Substitution',
+            detail: 'Fresh legs brought on',
             isHome: false),
       ],
     );
@@ -350,12 +388,14 @@ class _TimelineEvent extends StatelessWidget {
   final String minute;
   final IconData icon;
   final String description;
+  final String? detail;
   final bool isHome;
 
   const _TimelineEvent({
     required this.minute,
     required this.icon,
     required this.description,
+    this.detail,
     required this.isHome,
   });
 
@@ -369,7 +409,8 @@ class _TimelineEvent extends StatelessWidget {
         children: [
           if (!isHome) const Spacer(),
           Container(
-            padding: const EdgeInsets.all(8),
+            constraints: const BoxConstraints(maxWidth: 280),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: isHome
                   ? AppColors.primary.withValues(alpha: 0.1)
@@ -387,12 +428,18 @@ class _TimelineEvent extends StatelessWidget {
                     size: 16,
                     color: isHome ? AppColors.primary : AppColors.secondary),
                 const SizedBox(width: 8),
-                SizedBox(
-                  width: 200,
-                  child: Text(
-                    description,
-                    style: AppTypography.bodyMedium,
-                    overflow: TextOverflow.ellipsis,
+                Flexible(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(description,
+                          style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                          overflow: TextOverflow.ellipsis),
+                      if (detail != null)
+                        Text(detail!,
+                            style: AppTypography.bodySmall.copyWith(color: AppColors.textMuted),
+                            overflow: TextOverflow.ellipsis),
+                    ],
                   ),
                 ),
               ],
@@ -406,19 +453,37 @@ class _TimelineEvent extends StatelessWidget {
 }
 
 class _StatsTab extends StatelessWidget {
+  final SportEvent match;
+  const _StatsTab({required this.match});
+
   @override
   Widget build(BuildContext context) {
+    final homeScore = match.homeScore ?? 0;
+    final awayScore = match.awayScore ?? 0;
+    final totalScore = homeScore + awayScore;
+
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
         _StatRow(
+            label: 'Goals',
+            home: homeScore.toString(),
+            away: awayScore.toString(),
+            homeRatio: totalScore > 0 ? homeScore / totalScore : 0.5),
+        _StatRow(
             label: 'Possession', home: '58%', away: '42%', homeRatio: 0.58),
         _StatRow(label: 'Shots', home: '12', away: '8', homeRatio: 0.6),
         _StatRow(
-            label: 'Shots on Target', home: '5', away: '3', homeRatio: 0.625),
+            label: 'Shots on Target',
+            home: '5',
+            away: '3',
+            homeRatio: 0.625),
         _StatRow(label: 'Corners', home: '7', away: '4', homeRatio: 0.636),
         _StatRow(label: 'Fouls', home: '10', away: '14', homeRatio: 0.417),
-        _StatRow(label: 'Yellow Cards', home: '2', away: '3', homeRatio: 0.4),
+        _StatRow(
+            label: 'Yellow Cards', home: '2', away: '3', homeRatio: 0.4),
+        _StatRow(
+            label: 'Offsides', home: '1', away: '3', homeRatio: 0.25),
       ],
     );
   }
@@ -491,25 +556,201 @@ class _StatRow extends StatelessWidget {
 }
 
 class _LineupsTab extends StatelessWidget {
+  final SportEvent match;
+  const _LineupsTab({required this.match});
+
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Text('Lineups', style: AppTypography.bodyMedium),
+    final homePlayers = [
+      _Player('1', 'Goalkeeper', false),
+      _Player('2', 'Right Back', false),
+      _Player('4', 'Center Back', false),
+      _Player('5', 'Center Back', false),
+      _Player('3', 'Left Back', false),
+      _Player('8', 'Midfielder', false),
+      _Player('6', 'Def. Midfielder', false),
+      _Player('10', 'Att. Midfielder', false),
+      _Player('7', 'Right Wing', false),
+      _Player('11', 'Left Wing', false),
+      _Player('9', 'Striker', false),
+    ];
+    final awayPlayers = [
+      _Player('1', 'Goalkeeper', true),
+      _Player('2', 'Right Back', true),
+      _Player('4', 'Center Back', true),
+      _Player('5', 'Center Back', true),
+      _Player('3', 'Left Back', true),
+      _Player('8', 'Midfielder', true),
+      _Player('6', 'Def. Midfielder', true),
+      _Player('10', 'Att. Midfielder', true),
+      _Player('7', 'Right Wing', true),
+      _Player('11', 'Left Wing', true),
+      _Player('9', 'Striker', true),
+    ];
+
+    final formation4 = [
+      [homePlayers[0]],
+      [homePlayers[1], homePlayers[2], homePlayers[3], homePlayers[4]],
+      [homePlayers[5], homePlayers[6], homePlayers[7]],
+      [homePlayers[8], homePlayers[9], homePlayers[10]],
+    ];
+    final formation4away = [
+      [awayPlayers[0]],
+      [awayPlayers[1], awayPlayers[2], awayPlayers[3], awayPlayers[4]],
+      [awayPlayers[5], awayPlayers[6], awayPlayers[7]],
+      [awayPlayers[8], awayPlayers[9], awayPlayers[10]],
+    ];
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        Text(match.homeTeam,
+            style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.w700)),
+        const SizedBox(height: 8),
+        _FormationView(players: formation4, isHome: true),
+        const SizedBox(height: 24),
+        Divider(color: AppColors.textMuted.withValues(alpha: 0.3)),
+        const SizedBox(height: 8),
+        Text(match.awayTeam,
+            style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.w700)),
+        const SizedBox(height: 8),
+        _FormationView(players: formation4away, isHome: false),
+      ],
     );
   }
 }
 
+class _Player {
+  final String number;
+  final String name;
+  final bool isAway;
+  const _Player(this.number, this.name, this.isAway);
+}
+
+class _FormationView extends StatelessWidget {
+  final List<List<_Player>> players;
+  final bool isHome;
+  const _FormationView({required this.players, required this.isHome});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          isHome ? '4-3-3' : '4-3-3',
+          style: AppTypography.labelMedium.copyWith(color: AppColors.textMuted),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 280,
+          child: CustomPaint(
+            painter: _PitchPainter(),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: players.map((row) {
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: row.map((p) {
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: isHome
+                                ? AppColors.primary
+                                : AppColors.secondary,
+                            border: Border.all(color: Colors.white, width: 1.5),
+                          ),
+                          child: Center(
+                            child: Text(
+                              p.number,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        SizedBox(
+                          width: 56,
+                          child: Text(
+                            p.name,
+                            textAlign: TextAlign.center,
+                            style: AppTypography.labelSmall.copyWith(
+                              color: AppColors.textPrimary,
+                              fontSize: 9,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    );
+                  }).toList(),
+                );
+              }).toList(),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PitchPainter extends CustomPainter {
+  const _PitchPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.08)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+
+    final rect = Rect.fromLTWH(0, 0, size.width, size.height);
+    canvas.drawRect(rect, paint);
+
+    canvas.drawLine(
+      Offset(0, size.height / 2),
+      Offset(size.width, size.height / 2),
+      paint,
+    );
+
+    canvas.drawCircle(
+      Offset(size.width / 2, size.height / 2),
+      20,
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
 class _H2HTab extends StatelessWidget {
+  final SportEvent match;
+  const _H2HTab({required this.match});
+
   @override
   Widget build(BuildContext context) {
     return ListView(
       padding: const EdgeInsets.all(16),
-      children: const [
-        _H2HRow(home: 'Home', away: 'Away', score: '2 - 1'),
-        _H2HRow(home: 'Home', away: 'Away', score: '1 - 1'),
-        _H2HRow(home: 'Home', away: 'Away', score: '3 - 0'),
-        _H2HRow(home: 'Home', away: 'Away', score: '0 - 2'),
-        _H2HRow(home: 'Home', away: 'Away', score: '1 - 0'),
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Text('Head to Head',
+              style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.w700)),
+        ),
+        _H2HRow(home: match.homeTeam, away: match.awayTeam, score: '2 - 1'),
+        _H2HRow(home: match.homeTeam, away: match.awayTeam, score: '1 - 1'),
+        _H2HRow(home: match.homeTeam, away: match.awayTeam, score: '3 - 0'),
+        _H2HRow(home: match.homeTeam, away: match.awayTeam, score: '0 - 2'),
+        _H2HRow(home: match.homeTeam, away: match.awayTeam, score: '1 - 0'),
       ],
     );
   }
