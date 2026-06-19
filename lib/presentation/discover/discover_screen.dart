@@ -5,6 +5,7 @@ import '../../core/constants/app_typography.dart';
 import '../../data/repositories/movie_repository.dart';
 import '../../injection/dependency_injection.dart';
 import '../shared/widgets/content_card.dart';
+import '../shared/widgets/shimmer_loader.dart';
 import 'bloc/movie_bloc.dart';
 import 'bloc/movie_event.dart';
 import 'bloc/movie_state.dart';
@@ -161,7 +162,10 @@ class _DiscoverViewState extends State<_DiscoverView> {
             builder: (context, state) {
               if (state is MovieLoading) {
                 return const SliverFillRemaining(
-                  child: Center(child: CircularProgressIndicator()),
+                  child: Padding(
+                    padding: EdgeInsets.all(16),
+                    child: ShimmerGrid(itemCount: 8),
+                  ),
                 );
               }
               if (state is MovieError) {
@@ -172,7 +176,19 @@ class _DiscoverViewState extends State<_DiscoverView> {
                       children: [
                         const Icon(Icons.error_outline, size: 48, color: Color(0xFFEF4444)),
                         const SizedBox(height: 16),
-                        Text(state.message),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 32),
+                          child: Text(
+                            state.message,
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        FilledButton.icon(
+                          onPressed: () => context.read<MovieBloc>().add(const LoadPopularMovies()),
+                          icon: const Icon(Icons.refresh),
+                          label: const Text('Try Again'),
+                        ),
                       ],
                     ),
                   ),
@@ -180,6 +196,28 @@ class _DiscoverViewState extends State<_DiscoverView> {
               }
               if (state is MovieLoaded) {
                 final movies = state.movies;
+                if (movies.isEmpty) {
+                  return SliverFillRemaining(
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.movie, size: 64, color: Colors.grey),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'No movies found',
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Try adjusting your search',
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
                 return SliverGrid(
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,

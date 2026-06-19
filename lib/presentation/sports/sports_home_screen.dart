@@ -47,7 +47,16 @@ class _SportsView extends StatelessWidget {
       body: BlocBuilder<SportsBloc, SportsState>(
         builder: (context, state) {
           if (state is SportsLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Loading sports...'),
+                ],
+              ),
+            );
           }
           if (state is SportsError) {
             return Center(
@@ -56,7 +65,19 @@ class _SportsView extends StatelessWidget {
                 children: [
                   const Icon(Icons.error_outline, size: 48, color: Color(0xFFEF4444)),
                   const SizedBox(height: 16),
-                  Text(state.message),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 32),
+                    child: Text(
+                      state.message,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  FilledButton.icon(
+                    onPressed: () => context.read<SportsBloc>().add(const RefreshSports()),
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Try Again'),
+                  ),
                 ],
               ),
             );
@@ -67,6 +88,33 @@ class _SportsView extends StatelessWidget {
             final filteredScores = state.filteredScores;
             final liveScores = filteredScores.where((s) => s.isLive).toList();
             final todayMatches = filteredScores.where((s) => !s.isLive).toList();
+
+            if (filteredScores.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.sports_soccer, size: 64, color: Colors.grey),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'No matches right now',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Check back later for live scores',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                    const SizedBox(height: 24),
+                    FilledButton.icon(
+                      onPressed: () => context.read<SportsBloc>().add(const RefreshSports()),
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Refresh'),
+                    ),
+                  ],
+                ),
+              );
+            }
 
             return RefreshIndicator(
               onRefresh: () async => context.read<SportsBloc>().add(RefreshSports(sport: selectedSport)),
@@ -87,25 +135,25 @@ class _SportsView extends StatelessWidget {
                       child: Row(
                         children: [
                           _TournamentChip(
-                            label: '🌍 World Cup',
+                            label: 'ðŸŒ World Cup',
                             selected: selectedTournament == 'worldcup',
                             onTap: () => context.read<SportsBloc>().add(const FilterByTournament('worldcup')),
                           ),
                           const SizedBox(width: 8),
                           _TournamentChip(
-                            label: '⚽ All',
+                            label: 'âš½ All',
                             selected: selectedTournament == 'all',
                             onTap: () => context.read<SportsBloc>().add(const FilterByTournament('all')),
                           ),
                           const SizedBox(width: 8),
                           _TournamentChip(
-                            label: '🏆 UCL',
+                            label: 'ðŸ† UCL',
                             selected: selectedTournament == 'ucl',
                             onTap: () => context.read<SportsBloc>().add(const FilterByTournament('ucl')),
                           ),
                           const SizedBox(width: 8),
                           _TournamentChip(
-                            label: '🏴󠁧󠁢󠁥󠁮󠁧󠁿 EPL',
+                            label: 'ðŸ´ó §ó ¢ó ¥ó ®ó §ó ¿ EPL',
                             selected: selectedTournament == 'epl',
                             onTap: () => context.read<SportsBloc>().add(const FilterByTournament('epl')),
                           ),
