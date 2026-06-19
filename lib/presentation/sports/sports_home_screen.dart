@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
 import '../../core/constants/app_spacing.dart';
+import '../../core/utils/team_flags.dart';
 import '../../data/repositories/sports_repository.dart';
 import '../../domain/entities/sport_event.dart';
 import '../../injection/dependency_injection.dart';
@@ -324,7 +325,7 @@ class LiveMatchPill extends StatelessWidget {
           children: [
             Flexible(
               child: Text(
-                match.homeTeam,
+                '${teamFlagEmoji(match.homeTeam)} ${match.homeTeam}',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: AppTypography.bodyMedium.copyWith(color: AppColors.textPrimary),
@@ -340,7 +341,7 @@ class LiveMatchPill extends StatelessWidget {
             const SizedBox(height: 4),
             Flexible(
               child: Text(
-                match.awayTeam,
+                '${teamFlagEmoji(match.awayTeam)} ${match.awayTeam}',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: AppTypography.bodyMedium.copyWith(color: AppColors.textPrimary),

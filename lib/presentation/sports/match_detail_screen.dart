@@ -1,5 +1,6 @@
 import 'package:streamvault/design_system/ds.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/utils/team_flags.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../data/repositories/sports_repository.dart';
@@ -288,13 +289,16 @@ class _TeamColumn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final flag = teamFlagEmoji(name);
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         CircleAvatar(
           radius: 28,
           backgroundColor: AppColors.surfaceElevated,
-          child: Icon(icon, color: Colors.white, size: 28),
+          child: flag.isNotEmpty
+              ? Text(flag, style: const TextStyle(fontSize: 28))
+              : Icon(icon, color: Colors.white, size: 28),
         ),
         const SizedBox(height: 8),
         Text(

@@ -1,4 +1,5 @@
 import 'package:streamvault/design_system/ds.dart';
+import '../../../core/utils/team_flags.dart';
 import '../../../domain/entities/sport_event.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
@@ -27,10 +28,12 @@ class MatchCard extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 14),
                 child: Row(
                   children: [
-                    CircleAvatar(
-                      radius: 16,
-                      backgroundColor: AppColors.surfaceElevated,
-                      child: Icon(match.sportIcon, size: 16, color: AppColors.textMuted),
+                    SizedBox(
+                      width: 32,
+                      height: 32,
+                      child: Center(
+                        child: Text(teamFlagEmoji(match.homeTeam), style: const TextStyle(fontSize: 20)),
+                      ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
@@ -76,10 +79,12 @@ class MatchCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    CircleAvatar(
-                      radius: 16,
-                      backgroundColor: AppColors.surfaceElevated,
-                      child: Icon(match.sportIcon, size: 16, color: AppColors.textMuted),
+                    SizedBox(
+                      width: 32,
+                      height: 32,
+                      child: Center(
+                        child: Text(teamFlagEmoji(match.awayTeam), style: const TextStyle(fontSize: 20)),
+                      ),
                     ),
                   ],
                 ),
