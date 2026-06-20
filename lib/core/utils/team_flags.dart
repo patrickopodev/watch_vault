@@ -1,5 +1,3 @@
-import 'package:flutter/foundation.dart';
-
 final Map<String, String> _countryFlags = {
   'iraq': '\u{1F1EE}\u{1F1F6}',
   'norway': '\u{1F1F3}\u{1F1F4}',
