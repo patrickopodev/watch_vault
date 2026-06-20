@@ -437,7 +437,7 @@ class _TimelineEvent extends StatelessWidget {
                           overflow: TextOverflow.ellipsis),
                       if (detail != null)
                         Text(detail!,
-                            style: AppTypography.bodySmall.copyWith(color: AppColors.textMuted),
+                            style: AppTypography.labelSmall.copyWith(color: AppColors.textMuted),
                             overflow: TextOverflow.ellipsis),
                     ],
                   ),
@@ -638,7 +638,7 @@ class _FormationView extends StatelessWidget {
       children: [
         Text(
           isHome ? '4-3-3' : '4-3-3',
-          style: AppTypography.labelMedium.copyWith(color: AppColors.textMuted),
+          style: AppTypography.bodyMedium.copyWith(color: AppColors.textMuted),
         ),
         const SizedBox(height: 12),
         SizedBox(

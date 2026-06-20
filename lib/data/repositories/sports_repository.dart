@@ -4,7 +4,7 @@ import '../sources/local/hive_storage.dart';
 class SportsRepository {
   final SportsApi _api;
 
-  static const List<String> _GLOBAL_PRIORITY = [
+  static const List<String> _globalPriority = [
     'FIFA World Cup',
     'World Cup',
     'UEFA Champions League',
@@ -20,11 +20,11 @@ class SportsRepository {
   SportsRepository(this._api);
 
   int _priorityIndex(String? league) {
-    if (league == null) return _GLOBAL_PRIORITY.length;
-    for (var i = 0; i < _GLOBAL_PRIORITY.length; i++) {
-      if (league.contains(_GLOBAL_PRIORITY[i])) return i;
+    if (league == null) return _globalPriority.length;
+    for (var i = 0; i < _globalPriority.length; i++) {
+      if (league.contains(_globalPriority[i])) return i;
     }
-    return _GLOBAL_PRIORITY.length;
+    return _globalPriority.length;
   }
 
   List<SportEvent> _sortGlobalPriority(List<SportEvent> events) {
