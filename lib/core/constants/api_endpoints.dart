@@ -29,4 +29,14 @@ class ApiEndpoints {
   static String sportsTeams(String sport) {
     return '$cacheWorkerBase?origin=thesportsdb&endpoint=searchteams&t=$sport';
   }
+
+  static String standings({String? league}) {
+    final params = <String, String>{'origin': 'supabase', 'table': 'standings'};
+    if (league != null) params['league'] = league;
+    return Uri.https(
+      Uri.parse(cacheWorkerBase).host,
+      '/',
+      params,
+    ).toString();
+  }
 }

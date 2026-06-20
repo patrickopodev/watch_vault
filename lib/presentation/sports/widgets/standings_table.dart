@@ -1,12 +1,17 @@
 import 'package:streamvault/design_system/ds.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_typography.dart';
+import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_typography.dart';
+import '../../../domain/entities/standing.dart';
 
 class StandingsTable extends StatelessWidget {
-  const StandingsTable({super.key});
+  final List<Standing> standings;
+
+  const StandingsTable({super.key, this.standings = const []});
 
   @override
   Widget build(BuildContext context) {
+    if (standings.isEmpty) return const SizedBox.shrink();
+
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -16,7 +21,7 @@ class StandingsTable extends StatelessWidget {
       child: Column(
         children: [
           _buildHeader(),
-          ..._mockStandings.asMap().entries.map((e) => _buildRow(e.key, e.value)),
+          ...standings.asMap().entries.map((e) => _buildRow(e.key, e.value)),
         ],
       ),
     );
@@ -50,9 +55,9 @@ class StandingsTable extends StatelessWidget {
     return SizedBox(width: width, child: widget);
   }
 
-  Widget _buildRow(int index, _StandingRow standing) {
+  Widget _buildRow(int index, Standing standing) {
     final isTop4 = index < 4;
-    final isRelegation = index >= _mockStandings.length - 2;
+    final isRelegation = index >= standings.length - 2;
 
     return Container(
       height: 48,
@@ -75,7 +80,7 @@ class StandingsTable extends StatelessWidget {
           SizedBox(
             width: 28,
             child: Text(
-              '${index + 1}',
+              '${standing.position}',
               style: AppTypography.bodyLarge.copyWith(color: AppColors.textMuted),
             ),
           ),
@@ -92,7 +97,7 @@ class StandingsTable extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  standing.name,
+                  standing.teamName,
                   style: AppTypography.bodyMedium.copyWith(color: AppColors.textPrimary),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -104,7 +109,7 @@ class StandingsTable extends StatelessWidget {
           _stat(standing.won, 28),
           _stat(standing.drawn, 28),
           _stat(standing.lost, 28),
-          _stat(standing.gd, 36),
+          _stat(standing.goalDifference, 36),
           SizedBox(
             width: 36,
             child: Text(
@@ -130,33 +135,3 @@ class StandingsTable extends StatelessWidget {
     );
   }
 }
-
-class _StandingRow {
-  final String name;
-  final int played;
-  final int won;
-  final int drawn;
-  final int lost;
-  final int gd;
-  final int points;
-  const _StandingRow({
-    required this.name,
-    this.played = 0,
-    this.won = 0,
-    this.drawn = 0,
-    this.lost = 0,
-    this.gd = 0,
-    this.points = 0,
-  });
-}
-
-const _mockStandings = [
-  _StandingRow(name: 'Manchester City', played: 28, won: 20, drawn: 5, lost: 3, gd: 45, points: 65),
-  _StandingRow(name: 'Liverpool', played: 28, won: 19, drawn: 7, lost: 2, gd: 38, points: 64),
-  _StandingRow(name: 'Arsenal', played: 28, won: 18, drawn: 6, lost: 4, gd: 32, points: 60),
-  _StandingRow(name: 'Aston Villa', played: 28, won: 17, drawn: 5, lost: 6, gd: 20, points: 56),
-  _StandingRow(name: 'Tottenham', played: 28, won: 16, drawn: 5, lost: 7, gd: 15, points: 53),
-  _StandingRow(name: 'Manchester United', played: 28, won: 14, drawn: 8, lost: 6, gd: 10, points: 50),
-  _StandingRow(name: 'West Ham', played: 28, won: 12, drawn: 8, lost: 8, gd: 2, points: 44),
-  _StandingRow(name: 'Chelsea', played: 28, won: 11, drawn: 7, lost: 10, gd: -3, points: 40),
-];

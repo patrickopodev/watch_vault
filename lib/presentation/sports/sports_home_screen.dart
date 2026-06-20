@@ -22,16 +22,27 @@ class SportsHomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => SportsBloc(
-        sl<SportsRepository>(),
-      )..add(const LoadLiveScores()),
+      create: (_) => SportsBloc(sl<SportsRepository>())..add(const LoadLiveScores()),
       child: const _SportsView(),
     );
   }
 }
 
-class _SportsView extends StatelessWidget {
+class _SportsView extends StatefulWidget {
   const _SportsView();
+
+  @override
+  State<_SportsView> createState() => _SportsViewState();
+}
+
+class _SportsViewState extends State<_SportsView> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<SportsBloc>().add(const LoadStandings());
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,6 +50,21 @@ class _SportsView extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Sports'),
         actions: [
+          BlocBuilder<SportsBloc, SportsState>(
+            builder: (context, state) {
+              if (state is SportsLoaded && state.favoriteTeams.isNotEmpty) {
+                return IconButton(
+                  icon: Icon(
+                    state.showFavoritesOnly ? Icons.star : Icons.star_border,
+                    color: state.showFavoritesOnly ? AppColors.warning : null,
+                  ),
+                  onPressed: () => context.read<SportsBloc>().add(SetShowFavorites(!state.showFavoritesOnly)),
+                  tooltip: state.showFavoritesOnly ? 'Show all' : 'Show favorites',
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () => context.read<SportsBloc>().add(const RefreshSports()),
@@ -136,25 +162,25 @@ class _SportsView extends StatelessWidget {
                       child: Row(
                         children: [
                           _TournamentChip(
-                            label: 'ðŸŒ World Cup',
+                            label: '🌍 World Cup',
                             selected: selectedTournament == 'worldcup',
                             onTap: () => context.read<SportsBloc>().add(const FilterByTournament('worldcup')),
                           ),
                           const SizedBox(width: 8),
                           _TournamentChip(
-                            label: 'âš½ All',
+                            label: '⚽ All',
                             selected: selectedTournament == 'all',
                             onTap: () => context.read<SportsBloc>().add(const FilterByTournament('all')),
                           ),
                           const SizedBox(width: 8),
                           _TournamentChip(
-                            label: 'ðŸ† UCL',
+                            label: '🏆 UCL',
                             selected: selectedTournament == 'ucl',
                             onTap: () => context.read<SportsBloc>().add(const FilterByTournament('ucl')),
                           ),
                           const SizedBox(width: 8),
                           _TournamentChip(
-                            label: 'ðŸ´ó §ó ¢ó ¥ó ®ó §ó ¿ EPL',
+                            label: '🏴󠁧󠁢󠁥󠁮󠁧󠁿 EPL',
                             selected: selectedTournament == 'epl',
                             onTap: () => context.read<SportsBloc>().add(const FilterByTournament('epl')),
                           ),
@@ -201,6 +227,11 @@ class _SportsView extends StatelessWidget {
                               '${liveScores.length} matches',
                               style: AppTypography.labelSmall,
                             ),
+                            const Spacer(),
+                            Text(
+                              'Auto-refresh 30s',
+                              style: AppTypography.labelSmall.copyWith(color: AppColors.textMuted),
+                            ),
                           ],
                         ),
                       ),
@@ -215,7 +246,10 @@ class _SportsView extends StatelessWidget {
                         separatorBuilder: (_, __) => const SizedBox(width: 10),
                         itemBuilder: (context, index) {
                           final match = liveScores[index];
-                          return LiveMatchPill(match: match);
+                          return LiveMatchPill(
+                            match: match,
+                            isFavorite: state.favoriteTeams.contains(match.homeTeam) || state.favoriteTeams.contains(match.awayTeam),
+                          );
                         },
                       ),
                     ),
@@ -223,9 +257,26 @@ class _SportsView extends StatelessWidget {
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: EdgeInsets.fromLTRB(16, 20, 16, 8),
-                      child: Text(
-                        "Today's Matches",
-                        style: AppTypography.titleMedium,
+                      child: Row(
+                        children: [
+                          Text(
+                            "Today's Matches",
+                            style: AppTypography.titleMedium,
+                          ),
+                          const Spacer(),
+                          if (state.showFavoritesOnly)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: AppColors.warning.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                'Favorites',
+                                style: AppTypography.labelSmall.copyWith(color: AppColors.warning),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                   ),
@@ -233,26 +284,31 @@ class _SportsView extends StatelessWidget {
                     delegate: SliverChildBuilderDelegate(
                       (context, index) {
                         final match = todayMatches[index];
-                        return MatchCard(match: match);
+                        return MatchCard(
+                          match: match,
+                          isFavorite: state.favoriteTeams.contains(match.homeTeam) || state.favoriteTeams.contains(match.awayTeam),
+                        );
                       },
                       childCount: todayMatches.length,
                     ),
                   ),
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(16, 20, 16, 8),
-                      child: Text(
-                        'Standings',
-                        style: AppTypography.titleMedium,
+                  if (state.standings.isNotEmpty)
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.fromLTRB(16, 20, 16, 8),
+                        child: Text(
+                          'Standings',
+                          style: AppTypography.titleMedium,
+                        ),
                       ),
                     ),
-                  ),
-                  const SliverToBoxAdapter(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16),
-                      child: StandingsTable(),
+                  if (state.standings.isNotEmpty)
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: StandingsTable(standings: state.standings),
+                      ),
                     ),
-                  ),
                   const SliverToBoxAdapter(
                     child: SizedBox(height: 16),
                   ),
@@ -305,7 +361,9 @@ class _TournamentChip extends StatelessWidget {
 
 class LiveMatchPill extends StatelessWidget {
   final SportEvent match;
-  const LiveMatchPill({super.key, required this.match});
+  final bool isFavorite;
+
+  const LiveMatchPill({super.key, required this.match, this.isFavorite = false});
 
   @override
   Widget build(BuildContext context) {

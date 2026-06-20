@@ -144,4 +144,5 @@ export 'package:flutter/material.dart' show
   Radius,
   Rect,
   runApp,
+  WidgetsBinding,
   WidgetsFlutterBinding;

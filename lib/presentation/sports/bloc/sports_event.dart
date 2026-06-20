@@ -38,3 +38,27 @@ class FilterByTournament extends SportsEvent {
   @override
   List<Object?> get props => [tournament];
 }
+
+class ToggleFavorite extends SportsEvent {
+  final String teamName;
+  const ToggleFavorite(this.teamName);
+
+  @override
+  List<Object?> get props => [teamName];
+}
+
+class SetShowFavorites extends SportsEvent {
+  final bool show;
+  const SetShowFavorites(this.show);
+
+  @override
+  List<Object?> get props => [show];
+}
+
+class LoadStandings extends SportsEvent {
+  final String? league;
+  const LoadStandings({this.league});
+
+  @override
+  List<Object?> get props => [league];
+}

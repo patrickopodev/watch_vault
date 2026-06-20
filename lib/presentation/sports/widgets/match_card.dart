@@ -1,3 +1,5 @@
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:streamvault/design_system/ds.dart';
 import '../../../core/utils/team_flags.dart';
 import '../../../domain/entities/sport_event.dart';
@@ -5,15 +7,19 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../shared/widgets/score_badge.dart';
+import '../bloc/sports_bloc.dart';
+import '../bloc/sports_event.dart';
 
 class MatchCard extends StatelessWidget {
   final SportEvent match;
-  const MatchCard({super.key, required this.match});
+  final bool isFavorite;
+
+  const MatchCard({super.key, required this.match, this.isFavorite = false});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => Navigator.pushNamed(context, '/sports/match/${match.matchId}?sport=${match.sport}'),
+      onTap: () => context.push('/sports/match/${match.matchId}?sport=${match.sport}'),
       child: Container(
         height: 90,
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -88,6 +94,22 @@ class MatchCard extends StatelessWidget {
                     ),
                   ],
                 ),
+              ),
+            ),
+            SizedBox(
+              width: 40,
+              child: IconButton(
+                icon: Icon(
+                  isFavorite ? Icons.star : Icons.star_border,
+                  color: isFavorite ? AppColors.warning : AppColors.textMuted,
+                  size: 20,
+                ),
+                onPressed: () {
+                  context.read<SportsBloc>().add(ToggleFavorite(match.homeTeam));
+                  context.read<SportsBloc>().add(ToggleFavorite(match.awayTeam));
+                },
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
               ),
             ),
           ],
