@@ -21,7 +21,7 @@ class MatchCard extends StatelessWidget {
     return GestureDetector(
       onTap: () => context.push('/sports/match/${match.matchId}?sport=${match.sport}'),
       child: Container(
-        height: 90,
+        height: 104,
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         decoration: BoxDecoration(
           color: AppColors.surface,
@@ -31,17 +31,17 @@ class MatchCard extends StatelessWidget {
           children: [
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14),
+                padding: const EdgeInsets.only(left: 14, right: 6),
                 child: Row(
                   children: [
                     SizedBox(
-                      width: 32,
-                      height: 32,
+                      width: 44,
+                      height: 44,
                       child: Center(
-                        child: Text(teamFlagEmoji(match.homeTeam), style: const TextStyle(fontSize: 20)),
+                        child: Text(teamFlagEmoji(match.homeTeam), style: const TextStyle(fontSize: 30)),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         match.homeTeam,
@@ -68,7 +68,7 @@ class MatchCard extends StatelessWidget {
             ),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14),
+                padding: const EdgeInsets.only(left: 6, right: 14),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
@@ -84,12 +84,12 @@ class MatchCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 10),
                     SizedBox(
-                      width: 32,
-                      height: 32,
+                      width: 44,
+                      height: 44,
                       child: Center(
-                        child: Text(teamFlagEmoji(match.awayTeam), style: const TextStyle(fontSize: 20)),
+                        child: Text(teamFlagEmoji(match.awayTeam), style: const TextStyle(fontSize: 30)),
                       ),
                     ),
                   ],
