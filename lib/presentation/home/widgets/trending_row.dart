@@ -1,4 +1,4 @@
-import 'package:streamvault/design_system/ds.dart';
+﻿import 'package:streamvault/design_system/widgets.dart';
 import '../../shared/widgets/content_card.dart';
 
 class TrendingRow extends StatelessWidget {

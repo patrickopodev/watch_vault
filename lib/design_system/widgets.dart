@@ -1,5 +1,5 @@
 // Design system: controlled re-export of Flutter Material widgets
-// All screen files import package:streamvault/design_system/ds.dart
+// Screen files import this directly (or ds.dart for backward compat)
 export 'package:flutter/material.dart' show
   Align,
   Alignment,

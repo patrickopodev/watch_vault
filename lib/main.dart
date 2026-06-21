@@ -1,4 +1,4 @@
-import 'package:streamvault/design_system/ds.dart';
+﻿import 'package:streamvault/design_system/widgets.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app.dart';
