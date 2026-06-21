@@ -21,7 +21,7 @@ class MatchCard extends StatelessWidget {
     return GestureDetector(
       onTap: () => context.push('/sports/match/${match.matchId}?sport=${match.sport}'),
       child: Container(
-        height: 104,
+        height: 88,
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         decoration: BoxDecoration(
           color: AppColors.surface,
@@ -31,29 +31,15 @@ class MatchCard extends StatelessWidget {
           children: [
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.only(left: 14, right: 6),
-                child: Row(
-                  children: [
-                    SizedBox(
-                      width: 44,
-                      height: 44,
-                      child: Center(
-                        child: Text(teamFlagEmoji(match.homeTeam), style: const TextStyle(fontSize: 30)),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        match.homeTeam,
-                        style: AppTypography.bodyLarge.copyWith(
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
+                padding: const EdgeInsets.only(left: 12),
+                child: Text(
+                  '${teamFlagEmoji(match.homeTeam)}  ${match.homeTeam}',
+                  style: AppTypography.bodyLarge.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ),
@@ -68,31 +54,16 @@ class MatchCard extends StatelessWidget {
             ),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.only(left: 6, right: 14),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        match.awayTeam,
-                        textAlign: TextAlign.right,
-                        style: AppTypography.bodyLarge.copyWith(
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    SizedBox(
-                      width: 44,
-                      height: 44,
-                      child: Center(
-                        child: Text(teamFlagEmoji(match.awayTeam), style: const TextStyle(fontSize: 30)),
-                      ),
-                    ),
-                  ],
+                padding: const EdgeInsets.only(right: 8),
+                child: Text(
+                  '${teamFlagEmoji(match.awayTeam)}  ${match.awayTeam}',
+                  textAlign: TextAlign.right,
+                  style: AppTypography.bodyLarge.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ),
