@@ -52,7 +52,7 @@ class _SportsViewState extends State<_SportsView> {
         actions: [
           BlocBuilder<SportsBloc, SportsState>(
             builder: (context, state) {
-              if (state is SportsLoaded && state.favoriteTeams.isNotEmpty) {
+              if (state.hasData && state.favoriteTeams.isNotEmpty) {
                 return IconButton(
                   icon: Icon(
                     state.showFavoritesOnly ? Icons.star : Icons.star_border,
@@ -73,7 +73,7 @@ class _SportsViewState extends State<_SportsView> {
       ),
       body: BlocBuilder<SportsBloc, SportsState>(
         builder: (context, state) {
-          if (state is SportsLoading) {
+          if (state.isLoading && !state.hasData) {
             return const Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -85,7 +85,7 @@ class _SportsViewState extends State<_SportsView> {
               ),
             );
           }
-          if (state is SportsError) {
+          if (state.hasError && !state.hasData) {
             return Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -95,7 +95,7 @@ class _SportsViewState extends State<_SportsView> {
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 32),
                     child: Text(
-                      state.message,
+                      state.error!,
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -109,7 +109,7 @@ class _SportsViewState extends State<_SportsView> {
               ),
             );
           }
-          if (state is SportsLoaded) {
+          if (state.hasData) {
             final selectedSport = state.selectedSport;
             final selectedTournament = state.selectedTournament;
             final filteredScores = state.filteredScores;

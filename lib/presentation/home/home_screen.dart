@@ -129,8 +129,8 @@ class _HomeBody extends StatelessWidget {
             ),
             BlocBuilder<SportsBloc, SportsState>(
               builder: (context, state) {
-                if (state is SportsLoaded) {
-                  final live = state.scores.where((s) => s.isLive).toList();
+                if (state.hasData) {
+                  final live = state.data!.where((s) => s.isLive).toList();
                   return LiveNowRow(matches: live);
                 }
                 return const LiveNowRow();
@@ -156,8 +156,8 @@ class _HomeBody extends StatelessWidget {
             ),
             BlocBuilder<SportsBloc, SportsState>(
               builder: (context, state) {
-                if (state is SportsLoaded) {
-                  final matches = state.scores;
+                if (state.hasData) {
+                  final matches = state.data!;
                   if (matches.isEmpty) {
                     return const SizedBox(
                       height: 80,

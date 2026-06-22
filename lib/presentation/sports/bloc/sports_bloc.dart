@@ -1,15 +1,15 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/logger.dart';
+import '../../../data/repositories/sports_repository.dart';
 import 'sports_event.dart';
 import 'sports_state.dart';
-import '../../../data/repositories/sports_repository.dart';
-import '../../../domain/entities/standing.dart';
 
 class SportsBloc extends Bloc<SportsEvent, SportsState> {
   final SportsRepository _repository;
   Timer? _autoRefreshTimer;
 
-  SportsBloc(this._repository) : super(const SportsInitial()) {
+  SportsBloc(this._repository) : super(const SportsState()) {
     on<LoadLiveScores>(_onLoadLiveScores);
     on<LoadBySport>(_onLoadBySport);
     on<RefreshSports>(_onRefresh);
@@ -36,14 +36,21 @@ class SportsBloc extends Bloc<SportsEvent, SportsState> {
     LoadLiveScores event,
     Emitter<SportsState> emit,
   ) async {
-    emit(const SportsLoading());
+    emit(state.copyWith(isLoading: true));
     try {
       final scores = await _repository.getLiveScores(sport: event.sport);
       final favorites = Set<String>.from(_repository.getFavoriteTeams());
-      emit(SportsLoaded(scores: scores, selectedSport: event.sport, favoriteTeams: favorites));
+      emit(state.copyWith(
+        isLoading: false,
+        data: scores,
+        error: null,
+        selectedSport: event.sport,
+        favoriteTeams: favorites,
+      ));
       _startAutoRefresh(event.sport);
-    } catch (e) {
-      emit(SportsError(message: e.toString()));
+    } catch (e, stack) {
+      Logger.log(LogLevel.error, 'LoadLiveScores failed', error: e, stack: stack);
+      emit(state.copyWith(isLoading: false, error: e.toString()));
     }
   }
 
@@ -64,20 +71,16 @@ class SportsBloc extends Bloc<SportsEvent, SportsState> {
   ) async {
     try {
       final scores = await _repository.getLiveScores(sport: event.sport);
-      final current = state;
-      final favorites = current is SportsLoaded ? current.favoriteTeams : <String>{};
-      final showFavs = current is SportsLoaded ? current.showFavoritesOnly : false;
-      final standings = current is SportsLoaded ? current.standings : const <Standing>[];
-      emit(SportsLoaded(
-        scores: scores,
+      emit(state.copyWith(
+        isLoading: false,
+        data: scores,
+        error: null,
         selectedSport: event.sport,
-        favoriteTeams: favorites,
-        showFavoritesOnly: showFavs,
-        standings: standings,
       ));
       _startAutoRefresh(event.sport);
-    } catch (e) {
-      emit(SportsError(message: e.toString()));
+    } catch (e, stack) {
+      Logger.log(LogLevel.error, 'RefreshSports failed', error: e, stack: stack);
+      emit(state.copyWith(isLoading: false, error: e.toString()));
     }
   }
 
@@ -85,76 +88,39 @@ class SportsBloc extends Bloc<SportsEvent, SportsState> {
     FilterByTournament event,
     Emitter<SportsState> emit,
   ) {
-    final current = state;
-    if (current is SportsLoaded) {
-      emit(SportsLoaded(
-        scores: current.scores,
-        selectedSport: current.selectedSport,
-        selectedTournament: event.tournament,
-        favoriteTeams: current.favoriteTeams,
-        showFavoritesOnly: current.showFavoritesOnly,
-        standings: current.standings,
-      ));
-    }
+    emit(state.copyWith(selectedTournament: event.tournament));
   }
 
   Future<void> _onToggleFavorite(
     ToggleFavorite event,
     Emitter<SportsState> emit,
   ) async {
-    final current = state;
-    if (current is SportsLoaded) {
-      final updated = Set<String>.from(current.favoriteTeams);
-      if (updated.contains(event.teamName)) {
-        updated.remove(event.teamName);
-      } else {
-        updated.add(event.teamName);
-      }
-      await _repository.setFavoriteTeams(updated.toList());
-      emit(SportsLoaded(
-        scores: current.scores,
-        selectedSport: current.selectedSport,
-        selectedTournament: current.selectedTournament,
-        favoriteTeams: updated,
-        showFavoritesOnly: current.showFavoritesOnly,
-        standings: current.standings,
-      ));
+    final updated = Set<String>.from(state.favoriteTeams);
+    if (updated.contains(event.teamName)) {
+      updated.remove(event.teamName);
+    } else {
+      updated.add(event.teamName);
     }
+    await _repository.setFavoriteTeams(updated.toList());
+    emit(state.copyWith(favoriteTeams: updated));
   }
 
   void _onSetShowFavorites(
     SetShowFavorites event,
     Emitter<SportsState> emit,
   ) {
-    final current = state;
-    if (current is SportsLoaded) {
-      emit(SportsLoaded(
-        scores: current.scores,
-        selectedSport: current.selectedSport,
-        selectedTournament: current.selectedTournament,
-        favoriteTeams: current.favoriteTeams,
-        showFavoritesOnly: event.show,
-        standings: current.standings,
-      ));
-    }
+    emit(state.copyWith(showFavoritesOnly: event.show));
   }
 
   Future<void> _onLoadStandings(
     LoadStandings event,
     Emitter<SportsState> emit,
   ) async {
-    final current = state;
-    if (current is! SportsLoaded) return;
     try {
       final standings = await _repository.getStandings(league: event.league);
-      emit(SportsLoaded(
-        scores: current.scores,
-        selectedSport: current.selectedSport,
-        selectedTournament: current.selectedTournament,
-        favoriteTeams: current.favoriteTeams,
-        showFavoritesOnly: current.showFavoritesOnly,
-        standings: standings,
-      ));
-    } catch (_) {}
+      emit(state.copyWith(standings: standings));
+    } catch (e, stack) {
+      Logger.log(LogLevel.warning, 'LoadStandings failed', error: e, stack: stack);
+    }
   }
 }

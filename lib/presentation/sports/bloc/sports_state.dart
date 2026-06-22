@@ -1,32 +1,18 @@
-import 'package:equatable/equatable.dart';
+import '../../../core/loading_state.dart';
 import '../../../domain/entities/sport_event.dart';
 import '../../../domain/entities/standing.dart';
 
-abstract class SportsState extends Equatable {
-  const SportsState();
-
-  @override
-  List<Object?> get props => [];
-}
-
-class SportsInitial extends SportsState {
-  const SportsInitial();
-}
-
-class SportsLoading extends SportsState {
-  const SportsLoading();
-}
-
-class SportsLoaded extends SportsState {
-  final List<SportEvent> scores;
+class SportsState extends LoadingState<List<SportEvent>, String> {
   final String? selectedSport;
   final String selectedTournament;
   final Set<String> favoriteTeams;
   final bool showFavoritesOnly;
   final List<Standing> standings;
 
-  const SportsLoaded({
-    required this.scores,
+  const SportsState({
+    super.isLoading,
+    super.data,
+    super.error,
     this.selectedSport,
     this.selectedTournament = 'all',
     this.favoriteTeams = const {},
@@ -35,6 +21,8 @@ class SportsLoaded extends SportsState {
   });
 
   List<SportEvent> get filteredScores {
+    final scores = data;
+    if (scores == null) return [];
     var filtered = scores;
     if (selectedTournament != 'all') {
       filtered = filtered.where((s) {
@@ -59,14 +47,31 @@ class SportsLoaded extends SportsState {
   }
 
   @override
-  List<Object?> get props => [scores, selectedSport, selectedTournament, favoriteTeams, showFavoritesOnly, standings];
-}
-
-class SportsError extends SportsState {
-  final String message;
-
-  const SportsError({required this.message});
+  SportsState copyWith({
+    bool? isLoading,
+    List<SportEvent>? data,
+    String? error,
+    String? selectedSport,
+    String? selectedTournament,
+    Set<String>? favoriteTeams,
+    bool? showFavoritesOnly,
+    List<Standing>? standings,
+  }) {
+    return SportsState(
+      isLoading: isLoading ?? this.isLoading,
+      data: data ?? this.data,
+      error: error ?? this.error,
+      selectedSport: selectedSport ?? this.selectedSport,
+      selectedTournament: selectedTournament ?? this.selectedTournament,
+      favoriteTeams: favoriteTeams ?? this.favoriteTeams,
+      showFavoritesOnly: showFavoritesOnly ?? this.showFavoritesOnly,
+      standings: standings ?? this.standings,
+    );
+  }
 
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [
+    isLoading, data, error, selectedSport, selectedTournament,
+    favoriteTeams, showFavoritesOnly, standings,
+  ];
 }
