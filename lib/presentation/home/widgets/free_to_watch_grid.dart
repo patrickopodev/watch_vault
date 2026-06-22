@@ -1,12 +1,24 @@
 ﻿import 'package:streamvault/design_system/widgets.dart';
-
+import '../../../domain/entities/movie.dart';
 import '../../shared/widgets/content_card.dart';
 
 class FreeToWatchGrid extends StatelessWidget {
-  const FreeToWatchGrid({super.key});
+  final List<Movie>? movies;
+
+  const FreeToWatchGrid({super.key, this.movies});
 
   @override
   Widget build(BuildContext context) {
+    if (movies == null) {
+      return const SizedBox(height: 200);
+    }
+    if (movies!.isEmpty) {
+      return const SizedBox(
+        height: 200,
+        child: Center(child: Text('No free content available')),
+      );
+    }
+    final displayItems = movies!.take(6).toList();
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -17,12 +29,18 @@ class FreeToWatchGrid extends StatelessWidget {
         crossAxisSpacing: 10,
         mainAxisSpacing: 10,
       ),
-      itemCount: 6,
-      itemBuilder: (_, __) => ContentCard(
-        title: 'Free Movie',
-        subtitle: '1h 45m',
-        duration: 'Free',
-      ),
+      itemCount: displayItems.length,
+      itemBuilder: (_, index) {
+        final movie = displayItems[index];
+        return ContentCard(
+          imageUrl: movie.posterUrl,
+          title: movie.title,
+          subtitle: movie.runtime != null
+              ? '${movie.runtime! ~/ 60}h ${movie.runtime! % 60}m'
+              : movie.year,
+          duration: 'Free',
+        );
+      },
     );
   }
 }

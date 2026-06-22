@@ -1,7 +1,17 @@
 ﻿import 'package:streamvault/design_system/widgets.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_typography.dart';
+import '../../data/repositories/movie_repository.dart';
+import '../../data/repositories/sports_repository.dart';
+import '../../injection/dependency_injection.dart';
+import '../discover/bloc/movie_bloc.dart';
+import '../discover/bloc/movie_event.dart';
+import '../discover/bloc/movie_state.dart';
+import '../sports/bloc/sports_bloc.dart';
+import '../sports/bloc/sports_event.dart';
+import '../sports/bloc/sports_state.dart';
 
 import 'widgets/featured_banner.dart';
 import 'widgets/trending_row.dart';
@@ -10,6 +20,25 @@ import 'widgets/free_to_watch_grid.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (_) => SportsBloc(sl<SportsRepository>())..add(const LoadLiveScores()),
+        ),
+        BlocProvider(
+          create: (_) => MovieBloc(sl<MovieRepository>())..add(const LoadPopularMovies()),
+        ),
+      ],
+      child: const _HomeBody(),
+    );
+  }
+}
+
+class _HomeBody extends StatelessWidget {
+  const _HomeBody();
 
   @override
   Widget build(BuildContext context) {
@@ -85,70 +114,113 @@ class HomeScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const FeaturedBanner(),
+            BlocBuilder<MovieBloc, MovieState>(
+              builder: (context, state) {
+                if (state is MovieLoaded && state.movies.isNotEmpty) {
+                  return FeaturedBanner(featured: state.movies.first);
+                }
+                return const FeaturedBanner();
+              },
+            ),
             const SizedBox(height: 8),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16),
               child: SectionHeader(title: 'Live Now', trailing: '🔴'),
             ),
-            const LiveNowRow(),
+            BlocBuilder<SportsBloc, SportsState>(
+              builder: (context, state) {
+                if (state is SportsLoaded) {
+                  final live = state.scores.where((s) => s.isLive).toList();
+                  return LiveNowRow(matches: live);
+                }
+                return const LiveNowRow();
+              },
+            ),
             const SizedBox(height: 8),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16),
               child: SectionHeader(title: 'Trending Movies', trailing: 'See all'),
             ),
-            const TrendingRow(),
+            BlocBuilder<MovieBloc, MovieState>(
+              builder: (context, state) {
+                if (state is MovieLoaded) {
+                  return TrendingRow(movies: state.movies);
+                }
+                return const TrendingRow();
+              },
+            ),
             const SizedBox(height: 8),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16),
               child: SectionHeader(title: "Today's Matches", trailing: 'See all'),
             ),
-            SizedBox(
-              height: 80,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: 5,
-                separatorBuilder: (_, __) => const SizedBox(width: 10),
-                itemBuilder: (_, __) => Container(
-                  width: 200,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(AppSpacing.borderRadiusMd),
-                    border: Border.all(color: AppColors.border),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          'Team A',
-                          style: AppTypography.bodyMedium.copyWith(fontSize: 11),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                      Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text('2 - 1',
-                              style: AppTypography.titleMedium.copyWith(fontSize: 14)),
-                          Text('LIVE',
-                              style: AppTypography.labelSmall.copyWith(
-                                color: AppColors.secondary,
-                              )),
-                        ],
-                      ),
-                      Expanded(
-                        child: Text(
-                          'Team B',
-                          style: AppTypography.bodyMedium.copyWith(fontSize: 11),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+            BlocBuilder<SportsBloc, SportsState>(
+              builder: (context, state) {
+                if (state is SportsLoaded) {
+                  final matches = state.scores;
+                  if (matches.isEmpty) {
+                    return const SizedBox(
+                      height: 80,
+                      child: Center(child: Text('No matches today')),
+                    );
+                  }
+                  return SizedBox(
+                    height: 80,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: matches.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 10),
+                      itemBuilder: (_, index) {
+                        final match = matches[index];
+                        return Container(
+                          width: 200,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: AppColors.surface,
+                            borderRadius: BorderRadius.circular(AppSpacing.borderRadiusMd),
+                            border: Border.all(color: AppColors.border),
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  match.homeTeam,
+                                  style: AppTypography.bodyMedium.copyWith(fontSize: 11),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                              Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    '${match.homeScore ?? '-'} - ${match.awayScore ?? '-'}',
+                                    style: AppTypography.titleMedium.copyWith(fontSize: 14),
+                                  ),
+                                  Text(
+                                    match.isLive ? 'LIVE' : match.minute,
+                                    style: AppTypography.labelSmall.copyWith(
+                                      color: match.isLive ? AppColors.danger : AppColors.secondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Expanded(
+                                child: Text(
+                                  match.awayTeam,
+                                  style: AppTypography.bodyMedium.copyWith(fontSize: 11),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                }
+                return const SizedBox(height: 80);
+              },
             ),
             const SizedBox(height: 8),
             const Padding(
@@ -181,7 +253,14 @@ class HomeScreen extends StatelessWidget {
               padding: EdgeInsets.symmetric(horizontal: 16),
               child: SectionHeader(title: 'Free to Watch', trailing: 'See all'),
             ),
-            const FreeToWatchGrid(),
+            BlocBuilder<MovieBloc, MovieState>(
+              builder: (context, state) {
+                if (state is MovieLoaded) {
+                  return FreeToWatchGrid(movies: state.movies);
+                }
+                return const FreeToWatchGrid();
+              },
+            ),
             const SizedBox(height: 24),
           ],
         ),

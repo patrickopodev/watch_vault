@@ -1,38 +1,46 @@
 ﻿import 'package:streamvault/design_system/widgets.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_typography.dart';
+import '../../../domain/entities/movie.dart';
 
 class FeaturedBanner extends StatelessWidget {
-  const FeaturedBanner({super.key});
+  final Movie? featured;
+
+  const FeaturedBanner({super.key, this.featured});
 
   @override
   Widget build(BuildContext context) {
+    final movie = featured;
     return Container(
       height: 420,
       width: double.infinity,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Colors.transparent, Color(0xFF0A0A0F)],
-          stops: [0.3, 1.0],
-        ),
-      ),
       child: Stack(
         children: [
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  AppColors.surfaceElevated,
-                  AppColors.surfaceElevated.withValues(alpha: 0.5),
-                ],
+          if (movie?.backdropUrl != null)
+            CachedNetworkImage(
+              imageUrl: movie!.backdropUrl!,
+              width: double.infinity,
+              height: 420,
+              fit: BoxFit.cover,
+              errorWidget: (_, __, ___) => _placeholderLayer(),
+            )
+          else
+            _placeholderLayer(),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: 280,
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Colors.transparent, Color(0xFF0A0A0F)],
+                  stops: [0.0, 0.6],
+                ),
               ),
-            ),
-            child: const Center(
-              child: Icon(Icons.movie, size: 80, color: Color(0xFF50505F)),
             ),
           ),
           Positioned(
@@ -42,26 +50,35 @@ class FeaturedBanner extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    _GenreChip('Action'),
-                    const SizedBox(width: 8),
-                    _GenreChip('Adventure'),
-                    const SizedBox(width: 8),
-                    _GenreChip('Sci-Fi'),
-                  ],
-                ),
+                if (movie != null && movie.genres.isNotEmpty)
+                  Row(
+                    children: movie.genres.take(3).map((genre) => Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: _GenreChip(genre),
+                    )).toList(),
+                  )
+                else
+                  Row(
+                    children: [
+                      _GenreChip('Action'),
+                      const SizedBox(width: 8),
+                      _GenreChip('Adventure'),
+                      const SizedBox(width: 8),
+                      _GenreChip('Sci-Fi'),
+                    ],
+                  ),
                 const SizedBox(height: 12),
                 Text(
-                  'Featured Movie Title',
+                  movie?.title ?? 'Featured Movie Title',
                   style: AppTypography.displayMedium.copyWith(color: Colors.white),
                   maxLines: 2,
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'An epic adventure across the galaxy',
+                  movie?.overview ?? 'An epic adventure across the galaxy',
                   style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
                   maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 12),
                 Row(
@@ -105,6 +122,24 @@ class FeaturedBanner extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _placeholderLayer() {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            AppColors.surfaceElevated,
+            AppColors.surfaceElevated.withValues(alpha: 0.5),
+          ],
+        ),
+      ),
+      child: const Center(
+        child: Icon(Icons.movie, size: 80, color: Color(0xFF50505F)),
       ),
     );
   }
