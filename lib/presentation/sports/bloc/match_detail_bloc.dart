@@ -2,13 +2,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'match_detail_event.dart';
 import 'match_detail_state.dart';
 import '../../../data/repositories/sports_repository.dart';
+import '../../../injection/dependency_injection.dart';
 
 class MatchDetailBloc extends Bloc<MatchDetailEvent, MatchDetailState> {
   final SportsRepository _repository;
   final String matchId;
 
-  MatchDetailBloc(this._repository, this.matchId)
-      : super(const MatchDetailInitial()) {
+  MatchDetailBloc({required this.matchId})
+      : _repository = sl<SportsRepository>(),
+        super(const MatchDetailInitial()) {
     on<LoadMatchDetail>(_onLoadMatchDetail);
     on<RefreshMatchDetail>(_onRefresh);
     add(const LoadMatchDetail());

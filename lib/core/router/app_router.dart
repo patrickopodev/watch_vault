@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../../presentation/home/home_screen.dart';
 import '../../presentation/discover/discover_screen.dart';
 import '../../presentation/sports/sports_home_screen.dart';
-import '../../presentation/sports/match_detail_screen.dart';
+import '../../presentation/sports/match_detail/match_detail_screen.dart';
 import '../../presentation/live/live_home_screen.dart';
 import '../../presentation/live/live_watch_screen.dart';
 import '../../presentation/public_domain/pd_player_screen.dart';
